@@ -163,8 +163,7 @@
       storedUsers[userId] = {
         password: password,
         registered: Date.now(),
-        isAdmin: false,
-        data: []
+        isAdmin: false
       };
       localStorage.setItem('users', JSON.stringify(storedUsers));
     }
@@ -178,9 +177,6 @@
       if (storedUsers[currentUser].isAdmin) {
         document.getElementById('adminArea').style.display = 'block';
       }
-
-      // Restore user data into memory if needed
-      restoreUserData();
     } else {
       alert('Invalid credentials.');
     }
@@ -207,12 +203,6 @@
 
     alert('Password changed successfully');
     document.getElementById('passwordChangeContainer').style.display = 'none';
-  }
-
-  function restoreUserData() {
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    const user = users[currentUser];
-    console.log("Restored Data for", currentUser, user.data || []);
   }
 </script>
 </body>
