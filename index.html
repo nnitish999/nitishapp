@@ -6,11 +6,9 @@
   <title>NITISH APP</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&display=swap');
-
     :root {
       --bg-color: #ffffff;
     }
-
     body {
       font-family: Arial, sans-serif;
       background-color: var(--bg-color);
@@ -30,6 +28,7 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative;
       padding-top: 140px;
+      display: none;
     }
     input, select, button {
       padding: 10px;
@@ -52,18 +51,9 @@
       border-bottom: 1px solid #ddd;
       align-items: center;
     }
-    .status-delivered {
-      color: green;
-      font-weight: bold;
-    }
-    .status-coming {
-      color: orange;
-      font-weight: bold;
-    }
-    .status-cashed {
-      color: red;
-      font-weight: bold;
-    }
+    .status-delivered { color: green; font-weight: bold; }
+    .status-coming { color: orange; font-weight: bold; }
+    .status-cashed { color: red; font-weight: bold; }
     .headers {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
@@ -72,7 +62,7 @@
       margin-top: 20px;
       padding-bottom: 5px;
     }
-    img.product-image, img.passport-image, img.preview-image {
+    img.product-image, img.passport-image {
       width: 50px;
       height: 50px;
       object-fit: cover;
@@ -98,190 +88,132 @@
       border-radius: 10px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-    .passport-upload input {
+    .passport-upload input { width: 100%; }
+    #passportPreview { margin-top: 10px; }
+    #loginContainer {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .admin-area {
+      border: 2px dashed red;
+      padding: 15px;
+      margin-top: 30px;
+      background-color: #fff5f5;
+    }
+    .admin-area h2 {
+      color: red;
+    }
+    #searchInput {
       width: 100%;
-    }
-    #passportPreview {
-      margin-top: 10px;
-    }
-    #productImagePreview {
-      margin-top: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-
-  <h1>NITISH APP</h1>
-  <div class="container">
-    <div class="passport-upload">
-      <label>Optional Passport Size Photo:</label>
-      <input type="file" id="passportPhoto" accept="image/*" onchange="showPassportPhoto(event)" />
-      <div id="passportPreview"></div>
-    </div>
-
-    <div class="theme-selector">
-      <label for="theme">Choose Background Color: </label>
-      <select id="theme" onchange="changeTheme()">
-        <option value="white">White</option>
-        <option value="black">Black</option>
-        <option value="blue">Blue</option>
-        <option value="red">Red</option>
-      </select>
-    </div>
-
-    <input type="text" id="userId" placeholder="Enter user ID (unique number)" />
-    <input type="number" id="productPrice" placeholder="Enter price (in ₹)" />
-    <input type="text" id="productName" placeholder="Enter product name" />
-    <input type="number" id="productAmount" placeholder="Enter Quantity" />
-    <select id="productStatus">
-      <option value="">-- Optional: Select Status --</option>
-      <option value="coming">Coming</option>
-      <option value="delivered">Delivered</option>
-      <option value="cashed">Cashed Out</option>
-    </select>
-    <input type="file" id="productImage" accept="image/*" onchange="previewProductImage(event)" />
-    <div id="productImagePreview"></div>
-    <button onclick="addProduct()">Add Product</button>
-
-    <div class="headers">
-      <span>User ID</span>
-      <span>Price</span>
-      <span>Product Name</span>
-      <span>QUANTITY</span>
-      <span>Status</span>
-      <span>Image</span>
-    </div>
-    <div id="productList"></div>
-
-    <div class="user-history" id="userHistory"></div>
+  <div id="loginContainer">
+    <h2>Login</h2>
+    <input type="text" id="loginUserId" placeholder="Enter User ID">
+    <input type="password" id="loginPassword" placeholder="Enter Password">
+    <button onclick="loginUser()">Login</button>
   </div>
 
-  <script>
-    let products = JSON.parse(localStorage.getItem('products')) || [];
+  <div class="container" id="appContainer">
+    <button onclick="logoutUser()">Logout</button>
+    <button onclick="showChangePassword()">Change Password</button>
 
-    function changeTheme() {
-      const selected = document.getElementById('theme').value;
-      let color;
-      switch (selected) {
-        case 'black': color = '#000000'; break;
-        case 'blue': color = '#007BFF'; break;
-        case 'red': color = '#FF4C4C'; break;
-        default: color = '#FFFFFF';
-      }
-      document.body.style.setProperty('--bg-color', color);
+    <div id="adminArea" class="admin-area" style="display: none;">
+      <h2>Admin Special Panel</h2>
+      <p>This area is only visible to admin. You can manage and review all users' data here.</p>
+      <input type="text" id="searchInput" placeholder="Search by product name or user ID..." oninput="showAllUserData()" />
+      <button onclick="showAllUserData()">Show All User Data</button>
+      <div id="adminData"></div>
+    </div>
+  </div>
+
+  <div id="passwordChangeContainer" style="display:none; max-width:400px; margin: 30px auto;">
+    <h3>Change Password</h3>
+    <input type="password" id="newPassword" placeholder="Enter new password">
+    <button onclick="changePassword()">Submit</button>
+  </div>
+
+<script>
+  let currentUser = null;
+
+  function loginUser() {
+    const userId = document.getElementById('loginUserId').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    if (!userId || !password) {
+      alert('Please enter both User ID and Password.');
+      return;
     }
 
-    function showPassportPhoto(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('passportPreview').innerHTML = `<img class="passport-image" src="${e.target.result}" alt="Passport Photo" />`;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
+    let storedUsers = JSON.parse(localStorage.getItem('users') || '{}');
 
-    function previewProductImage(event) {
-      const file = event.target.files[0];
-      const preview = document.getElementById('productImagePreview');
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          preview.innerHTML = `<img class="preview-image" src="${e.target.result}" alt="Product Preview" />`;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        preview.innerHTML = '';
-      }
-    }
-
-    function addProduct() {
-      const userId = document.getElementById('userId').value.trim();
-      const name = document.getElementById('productName').value.trim();
-      const price = parseFloat(document.getElementById('productPrice').value.trim());
-      const amount = parseInt(document.getElementById('productAmount').value.trim());
-      const status = document.getElementById('productStatus').value;
-      const imageInput = document.getElementById('productImage');
-      const file = imageInput?.files[0];
-
-      if (!userId || !name || isNaN(price) || isNaN(amount)) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-
-      if (products.length >= 1000) {
-        alert('Product limit reached (1000).');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const imageUrl = e.target.result;
-        products.push({ userId, name, price, amount, status, imageUrl });
-        localStorage.setItem('products', JSON.stringify(products));
-        renderProducts();
-        clearInputs();
+    // First-time login - create account only if user does not exist
+    if (!storedUsers[userId]) {
+      storedUsers[userId] = {
+        password: password,
+        registered: Date.now(),
+        isAdmin: false,
+        data: []
       };
+      localStorage.setItem('users', JSON.stringify(storedUsers));
+    }
 
-      if (file) {
-        reader.readAsDataURL(file);
-      } else {
-        products.push({ userId, name, price, amount, status, imageUrl: '' });
-        localStorage.setItem('products', JSON.stringify(products));
-        renderProducts();
-        clearInputs();
+    // Validate login
+    if (storedUsers[userId] && storedUsers[userId].password === password) {
+      currentUser = userId;
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('appContainer').style.display = 'block';
+
+      if (storedUsers[currentUser].isAdmin) {
+        document.getElementById('adminArea').style.display = 'block';
       }
+
+      // Restore user data into memory if needed
+      restoreUserData();
+    } else {
+      alert('Invalid credentials.');
     }
+  }
 
-    function clearInputs() {
-      document.getElementById('userId').value = '';
-      document.getElementById('productName').value = '';
-      document.getElementById('productPrice').value = '';
-      document.getElementById('productAmount').value = '';
-      document.getElementById('productImage').value = '';
-      document.getElementById('productImagePreview').innerHTML = '';
-      document.getElementById('productStatus').value = '';
-    }
+  function logoutUser() {
+    currentUser = null;
+    document.getElementById('loginContainer').style.display = 'block';
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('passwordChangeContainer').style.display = 'none';
+  }
 
-    function renderProducts() {
-      const list = document.getElementById('productList');
-      list.innerHTML = '';
-      products.forEach((product) => {
-        const div = document.createElement('div');
-        div.classList.add('product');
-        div.innerHTML = `
-          <span><a href="#" onclick="showUserHistory('${product.userId}')">${product.userId}</a></span>
-          <span>₹${product.price}</span>
-          <span>${product.name}</span>
-          <span>${product.amount}</span>
-          <span class="status-${product.status}">${product.status || '-'}</span>
-          <span>${product.imageUrl ? `<img class="product-image" src="${product.imageUrl}" alt="Product Image" />` : '-'}</span>
-        `;
-        list.appendChild(div);
-      });
-    }
+  function showChangePassword() {
+    document.getElementById('passwordChangeContainer').style.display = 'block';
+  }
 
-    function showUserHistory(userId) {
-      const userProducts = products.filter(p => p.userId === userId);
-      const totalPrice = userProducts.reduce((sum, p) => sum + (p.price * p.amount), 0);
-      const totalDeliveries = userProducts.length;
-      const delivered = userProducts.filter(p => p.status === 'delivered').length;
+  function changePassword() {
+    const newPassword = document.getElementById('newPassword').value.trim();
+    if (!newPassword) return alert('Password cannot be empty');
 
-      const historyDiv = document.getElementById('userHistory');
-      historyDiv.innerHTML = `
-        <h2>History for User ID: ${userId}</h2>
-        <p>Total Products: ${totalDeliveries}</p>
-        <p>Delivered: ${delivered}</p>
-        <p>Total Price of All Products: ₹${totalPrice.toFixed(2)}</p>
-        <ul>
-          ${userProducts.map(p => `<li>${p.name} - ₹${p.price} x ${p.amount} (${p.status || 'no status'})</li>`).join('')}
-        </ul>
-      `;
-    }
+    const storedUsers = JSON.parse(localStorage.getItem('users'));
+    storedUsers[currentUser].password = newPassword;
+    localStorage.setItem('users', JSON.stringify(storedUsers));
 
-    window.onload = renderProducts;
-  </script>
+    alert('Password changed successfully');
+    document.getElementById('passwordChangeContainer').style.display = 'none';
+  }
 
+  function restoreUserData() {
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    const user = users[currentUser];
+    console.log("Restored Data for", currentUser, user.data || []);
+  }
+</script>
 </body>
 </html>
