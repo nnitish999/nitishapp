@@ -1,209 +1,25 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NITISH APP</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&display=swap');
-    :root {
-      --bg-color: #ffffff;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background-color: var(--bg-color);
-      padding: 20px;
-      transition: background-color 0.3s ease;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      position: relative;
-      padding-top: 140px;
-      display: none;
-    }
-    input, select, button {
-      padding: 10px;
-      margin: 10px 0;
-      width: 100%;
-      font-size: 16px;
-      transition: all 0.3s ease;
-    }
-    select:focus, button:hover {
-      font-family: 'Rubik Wet Paint', cursive;
-      color: #fff;
-      background: linear-gradient(to right, #ff416c, #ff4b2b);
-      transform: scale(1.05);
-    }
-    .product {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid #ddd;
-      align-items: center;
-    }
-    .status-delivered { color: green; font-weight: bold; }
-    .status-coming { color: orange; font-weight: bold; }
-    .status-cashed { color: red; font-weight: bold; }
-    .headers {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-      font-weight: bold;
-      border-bottom: 2px solid #333;
-      margin-top: 20px;
-      padding-bottom: 5px;
-    }
-    img.product-image, img.passport-image {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 5px;
-    }
-    .theme-selector {
-      margin-bottom: 20px;
-    }
-    .user-history {
-      margin-top: 40px;
-    }
-    .user-history h2 {
-      margin-top: 0;
-    }
-    .passport-upload {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      text-align: center;
-      width: 120px;
-      background: #f9f9f9;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .passport-upload input { width: 100%; }
-    #passportPreview { margin-top: 10px; }
-    #loginContainer {
-      max-width: 400px;
-      margin: 100px auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .admin-area {
-      border: 2px dashed red;
-      padding: 15px;
-      margin-top: 30px;
-      background-color: #fff5f5;
-    }
-    .admin-area h2 {
-      color: red;
-    }
-    #searchInput {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gvala</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="loginContainer">
-    <h2>Login</h2>
-    <input type="text" id="loginUserId" placeholder="Enter User ID">
-    <input type="password" id="loginPassword" placeholder="Enter Password">
-    <button onclick="loginUser()">Login</button>
-  </div>
-
-  <div class="container" id="appContainer">
-    <button onclick="logoutUser()">Logout</button>
-    <button onclick="showChangePassword()">Change Password</button>
-
-    <div id="adminArea" class="admin-area" style="display: none;">
-      <h2>Admin Special Panel</h2>
-      <p>This area is only visible to admin. You can manage and review all users' data here.</p>
-      <input type="text" id="searchInput" placeholder="Search by product name or user ID..." oninput="showAllUserData()" />
-      <button onclick="showAllUserData()">Show All User Data</button>
-      <div id="adminData"></div>
+    <div class="splash-screen">
+        <h1 class="logo">Gvala Group</h1>
+        <p class="dev">Developed by Nitish</p>
     </div>
-  </div>
 
-  <div id="passwordChangeContainer" style="display:none; max-width:400px; margin: 30px auto;">
-    <h3>Change Password</h3>
-    <input type="password" id="newPassword" placeholder="Enter new password">
-    <button onclick="changePassword()">Submit</button>
-  </div>
+    <div class="login-container">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" />
+        <input type="password" id="password" placeholder="Password" />
+        <button onclick="login()">Login</button>
+    </div>
 
-<script>
-  let currentUser = null;
-
-  function loginUser() {
-    const userId = document.getElementById('loginUserId').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-
-    if (!userId || !password) {
-      alert('Please enter both User ID and Password.');
-      return;
-    }
-
-    let storedUsers = JSON.parse(localStorage.getItem('users') || '{}');
-
-    // First-time login - create account only if user does not exist
-    if (!storedUsers[userId]) {
-      storedUsers[userId] = {
-        password: password,
-        registered: Date.now(),
-        isAdmin: false
-      };
-      localStorage.setItem('users', JSON.stringify(storedUsers));
-    }
-
-    // Validate login
-    if (storedUsers[userId] && storedUsers[userId].password === password) {
-      currentUser = userId;
-      document.getElementById('loginContainer').style.display = 'none';
-      document.getElementById('appContainer').style.display = 'block';
-
-      if (storedUsers[currentUser].isAdmin) {
-        document.getElementById('adminArea').style.display = 'block';
-      }
-    } else {
-      alert('Invalid credentials.');
-    }
-  }
-
-  function logoutUser() {
-    currentUser = null;
-    document.getElementById('loginContainer').style.display = 'block';
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('passwordChangeContainer').style.display = 'none';
-  }
-
-  function showChangePassword() {
-    document.getElementById('passwordChangeContainer').style.display = 'block';
-  }
-
-  function changePassword() {
-    const newPassword = document.getElementById('newPassword').value.trim();
-    if (!newPassword) return alert('Password cannot be empty');
-
-    const storedUsers = JSON.parse(localStorage.getItem('users'));
-    storedUsers[currentUser].password = newPassword;
-    localStorage.setItem('users', JSON.stringify(storedUsers));
-
-    alert('Password changed successfully');
-    document.getElementById('passwordChangeContainer').style.display = 'none';
-  }
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
